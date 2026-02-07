@@ -1,0 +1,7 @@
+.cursorindexingignore
+.specstory
+.venv
+.vscode
+uv.lock
+reward.cpp
+__pycache__
