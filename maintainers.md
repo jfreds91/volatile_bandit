@@ -1,4 +1,4 @@
-# Maintainer setup
+# Maintainer setup 
 
 download wasi-sdk from https://github.com/WebAssembly/wasi-sdk/releases
 unzip, locate folder for it

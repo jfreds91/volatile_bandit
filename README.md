@@ -1,10 +1,15 @@
 # Volatile bandit — candidate instructions
 
-You have a **multi-armed bandit** simulator. Your goal is to implement a **policy** that chooses which arm to pull each round so that **cumulative reward** is as high as possible.
+*Wayfair - Jesse Fredrickson - 2026*
+
+![volatile bandit illustration](./image.png)
+
+This repo presents you with a **simulator** which holds an array of **arms** to choose from. When chosen, each **arm** returns some reward. Your goal is to implement a **policy** that chooses which arm to pull each round so that **cumulative reward** is as high as possible.
 
 ## What’s in the repo
 
 - **`main.py`** — Harness that runs 10,000 trials with a fixed seed, then prints cumulative reward and cumulative regret.
+-- **`reward.wasm`** - black box reward simulator. `main.py` handles this for you.
 - **`policy.py`** — Contains an abstract `Policy` class to help you, and a concrete `RandomPolicy` implementation as a demo
 
 Each round, the environment first samples a reward for every arm (you don’t see these until after you’ve chosen). You choose one arm; the harness then gives you that arm’s reward via `observe(arm, reward)`. Regret for the round is (best arm’s reward minus your arm’s reward).
