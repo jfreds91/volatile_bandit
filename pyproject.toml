@@ -8,3 +8,6 @@ dependencies = [
     "wasmtime>=41.0.0",
     "rich>=13.0.0",
 ]
+
+[tool.setuptools]
+py-modules = ["main", "policy"]
