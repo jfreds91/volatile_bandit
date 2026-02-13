@@ -2,17 +2,17 @@
 
 *Wayfair - Jesse Fredrickson - 2026*
 
+This repo presents you with a **simulator** which holds an array of 7 **arms** to choose from. When chosen, each **arm** returns some reward. Your goal is to implement a **policy** that chooses which arm to pull each round so that **cumulative reward** is as high as possible.
+
 ![volatile bandit illustration](./image.png)
 
-This repo presents you with a **simulator** which holds an array of 7 **arms** to choose from. When chosen, each **arm** returns some reward. Your goal is to implement a **policy** that chooses which arm to pull each round so that **cumulative reward** is as high as possible.
+This class of problem is called a **multi-armed bandit**. Experience with these problems is not expected or necessary - in fact, getting a high score isn't even necessary! We want to see that you can develop a solution that you can explain comfortably and code well.
 
 ## What’s in the repo
 
 - **`main.py`** — Harness that runs 10,000 trials. Each trial, it asks a `policy` to choose an arm, and it informs the `policy` what the reward for choosing that arm was. At the end of the trials, it prints out a summary of Cumulative Reward and Cumulative Regret.
 - **`policy.py`** — YOU IMPLEMENT THIS. Contains an abstract `Policy` class to help you, and a concrete `RandomPolicy` implementation as a demo.
 - **`reward.wasm`** - black box reward simulator. `main.py` handles this for you.
-
-Each round, the environment first samples a reward for every arm (you don’t see these until after you’ve chosen). You choose one arm using `choose_arm()`; the harness then gives you that arm’s reward via `observe(arm, reward)`. Regret for the round is (best arm’s reward minus your arm’s reward). At the end, your policy can print out its own summary information with `debug_printout()`.
 
 ## How to run
 
