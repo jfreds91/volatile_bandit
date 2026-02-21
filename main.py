@@ -5,17 +5,44 @@ import wasmtime
 from rich.console import Console
 from rich.table import Table
 
-from policy import RandomPolicy
+import policy
+
+# User setup:
+# Change this to whatever policy you want to use
+CHOSEN_POLICY = policy.RandomPolicy
 
 DEFAULT_SEED = 42
 VALIDATE_SEED = 123
+NUM_TRIALS = 10_000
 
+class RewardEngine:
+    """Wrapper for reward module. No need to read or understand this code."""
 
-def load_reward_module() -> tuple[wasmtime.Store, wasmtime.Instance]:
-    engine = wasmtime.Engine()
-    store = wasmtime.Store(engine)
-    module = wasmtime.Module.from_file(engine, "reward.wasm")
-    return store, wasmtime.Instance(store, module, [])
+    def __init__(self, wasm_path: str, seed: int) -> None:
+        engine = wasmtime.Engine()
+        self._store = wasmtime.Store(engine)
+        module = wasmtime.Module.from_file(engine, wasm_path)
+        instance = wasmtime.Instance(self._store, module, [])
+        exports = instance.exports(self._store)
+
+        self._step = exports["step"]
+        self._get_arm_reward = exports["get_arm_reward"]
+        self._get_num_arms = exports["get_num_arms"]
+
+        exports["init_reward_engine"](self._store, seed)
+
+    @property
+    def num_arms(self) -> int:
+        return self._get_num_arms(self._store)
+
+    def step(self, last_chosen_arm: int, entropy: int) -> None:
+        self._step(self._store, last_chosen_arm, entropy)
+
+    def get_arm_reward(self, arm: int) -> float:
+        return self._get_arm_reward(self._store, arm)
+
+    def best_reward(self) -> float:
+        return max(self.get_arm_reward(i) for i in range(self.num_arms))
 
 
 def main() -> None:
@@ -27,48 +54,42 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # --- SET UP SIMULATOR AND POLICY ---
     seed = VALIDATE_SEED if args.validate else DEFAULT_SEED
-
-    store, instance = load_reward_module()
-    exports = instance.exports(store)
-
-    init_reward_engine = exports["init_reward_engine"]
-    step = exports["step"]
-    get_arm_reward = exports["get_arm_reward"]
-    get_num_arms = exports["get_num_arms"]
-
-    init_reward_engine(store, seed)
-    num_arms = get_num_arms(store)
-    policy = RandomPolicy(num_arms, seed)
+    engine = RewardEngine("reward.wasm", seed)
+    pol = CHOSEN_POLICY(engine.num_arms, seed)
     rng = random.Random(seed)
 
-    cumulative_reward = 0.0
-    cumulative_regret = 0.0
-    num_trials = 10_000
+    # --- INITIALIZE TRIAL VARIABLES ---
+    cumulative_reward, cumulative_regret = 0.0, 0.0
     last_chosen_arm = -1
 
-    for _ in range(num_trials):
-        step(store, last_chosen_arm, rng.getrandbits(32))
-        chosen_arm = policy.choose_arm()
-        chosen_reward = get_arm_reward(store, chosen_arm)
-        policy.observe(chosen_arm, chosen_reward)
-        best_reward = max(get_arm_reward(store, i) for i in range(num_arms))
+    # --- RUN TRIALS ---
+    for _ in range(NUM_TRIALS):
+        engine.step(last_chosen_arm, rng.getrandbits(32))  # advance simulator state
+
+        chosen_arm = pol.choose_arm()  # ask policy to choose an arm
+        chosen_reward = engine.get_arm_reward(chosen_arm)  # get reward for chosen arm
+        pol.observe(chosen_arm, chosen_reward)  # inform policy of reward for their choice
+        
+        # update trial variables
         cumulative_reward += chosen_reward
-        cumulative_regret += best_reward - chosen_reward
+        cumulative_regret += engine.best_reward() - chosen_reward
         last_chosen_arm = chosen_arm
 
+    # --- PRINT RESULTS ---
     table = Table(title="Results")
     table.add_column("Metric", style="cyan")
     table.add_column("Value", justify="right", style="green")
-    table.add_row("Policy", policy.__class__.__name__)
+    table.add_row("Policy", pol.__class__.__name__)
     table.add_row("Seed", str(seed) + (" (validate)" if args.validate else ""))
-    table.add_row("Trials", f"{num_trials:,}")
+    table.add_row("Trials", f"{NUM_TRIALS:,}")
     table.add_row("Cumulative reward", f"{cumulative_reward:,.4f}")
     table.add_row("Cumulative regret", f"{cumulative_regret:,.4f}")
     Console().print(table)
 
     print("\n--- User debugging (policy.debug_printout()) ---\n")
-    print(policy.debug_printout())
+    print(pol.debug_printout())
 
 
 if __name__ == "__main__":
