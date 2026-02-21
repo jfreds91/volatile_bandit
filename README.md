@@ -10,7 +10,7 @@ This class of problems is called a **multi-armed bandit**; NO EXPERIENCE with ba
 
 ![volatile bandit illustration](./image.png)
 
-If a real-world example is helpful: consider that you want to advertise a specific red sofa on Google, and you need to choose a lead image. You have 7 product photos to choose from. How would you determine which image is associated with the highest reward on average? Is it possible that this could change over time?
+If a real-world example is helpful: consider that you want to advertise a specific red sofa on Google, and you need to choose a lead image. You have 7 product photos to choose from. How would you pick what image to show every day/week? Is it possible that your choice could change over time?
 
 ## What’s in the repo
 
