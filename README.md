@@ -2,11 +2,15 @@
 
 *Wayfair - Jesse Fredrickson - 2026*
 
-This repo presents you with a **simulator** which holds an array of 7 **arms** to choose from. When chosen, each **arm** returns some reward. Your goal is to implement a **policy** that chooses which arm to pull each round so that **cumulative reward** is as high as possible.
+The goal of this scenario is to assess your ability to solve an ambiguous problem with code, in a realistic setting. Googling is fine, AI is fine. You're here because you're smart - now show us how you like to work!
+
+This repo presents you with a **simulator** which holds an array of 7 **arms** to choose from. When chosen, each **arm** returns some reward. Your goal is to implement a **policy** that chooses which arm to pull each round, and maximizes your total reward over 10,000 trials.
+
+This class of problems is called a **multi-armed bandit**; NO EXPERIENCE with bandits is expected or necessary. Think about how you would solve this as a human. A simple solution can get you surprisingly far.
 
 ![volatile bandit illustration](./image.png)
 
-This class of problem is called a **multi-armed bandit**. Experience with these problems is not expected or necessary - in fact, getting a high score isn't even necessary! We want to see that you can develop a solution that you can explain comfortably and code well.
+If a real-world example is helpful: consider that you want to advertise a specific red sofa on Google, and you need to choose a lead image. You have 7 product photos to choose from. How would you determine which image is associated with the highest reward on average? Is it possible that this could change over time?
 
 ## What’s in the repo
 
@@ -17,14 +21,10 @@ This class of problem is called a **multi-armed bandit**. Experience with these 
 ## How to run
 
 ```bash
-// fixed seed A
-uv run python main.py
-
-// fixed seed B
-uv run python main.py --validate
+uv run python main.py [--validate]
 ```
 
-Use the `--validate` flag to confirm you approach generalizes.
+Use the `--validate` flag to confirm your approach generalizes by setting a different random seed.
 
 or, if you prefer pip
 ```bash
@@ -40,17 +40,5 @@ python3 main.py
 - Treat this as a real work task. How would you solve it at Wayfair?
     - Can you explain your solution in detail? Why does it work? What tradeoffs does it make?
     - Is your code production-ready?
-
-
-## DO:
-
-- You may use any development environment and resources you want. Google is fine. AI is fine.
-- You may use any logic inside your policy. You may add dependencies in `pyproject.toml` if needed.
-
-
-## DO NOT:
-
-- Do not change `main.py` (outside of selecting a different policy)
-- Do not modify `reward.wasm`
 
 Good luck!
