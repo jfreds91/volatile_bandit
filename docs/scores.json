@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "commit": "cf5a39202bc98dbc4ce6880f2f7cf505e59bc9a8",
+    "branch": "test/ci-dry-run",
+    "policy": "RandomPolicy",
+    "score": 536261.7847,
+    "regret": 615354.9237,
+    "timestamp": "2026-03-11T20:57:11.090928+00:00"
+  }
+]
