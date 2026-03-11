@@ -1,0 +1,67 @@
+name: Evaluate submission
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - maintainer
+
+concurrency:
+  group: evaluate-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout submission branch
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .
+
+      - name: Download test simulator
+        run: curl -fsSL "${{ secrets.TEST_WASM_URL }}" -o test_sim.wasm
+
+      - name: Run evaluation
+        id: eval
+        run: |
+          result=$(python main.py --sim test_sim.wasm --score-only)
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout main for leaderboard update
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: _main
+          token: ${{ secrets.LEADERBOARD_PAT }}
+
+      - name: Update scores
+        run: |
+          result='${{ steps.eval.outputs.result }}'
+          score=$(echo "$result" | python -c "import sys,json; print(json.load(sys.stdin)['score'])")
+          regret=$(echo "$result" | python -c "import sys,json; print(json.load(sys.stdin)['regret'])")
+          policy=$(echo "$result" | python -c "import sys,json; print(json.load(sys.stdin)['policy'])")
+
+          cd _main
+          python docs/update_scores.py \
+            --commit "${{ github.sha }}" \
+            --branch "${{ github.ref_name }}" \
+            --policy "$policy" \
+            --score "$score" \
+            --regret "$regret"
+
+      - name: Push leaderboard
+        working-directory: _main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/scores.json
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "score: ${{ github.ref_name }} @ ${GITHUB_SHA::7}"
+          git push

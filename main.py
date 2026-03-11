@@ -1,4 +1,5 @@
 import argparse
+import json
 import random
 
 import wasmtime
@@ -7,13 +8,13 @@ from rich.table import Table
 
 import policy
 
-# User setup:
-# Change this to whatever policy you want to use
+# ── Change this to whatever policy you want to compete with ──
 CHOSEN_POLICY = policy.RandomPolicy
 
 DEFAULT_SEED = 42
 VALIDATE_SEED = 123
 NUM_TRIALS = 10_000
+
 
 class RewardEngine:
     """Wrapper for reward module. No need to read or understand this code."""
@@ -48,36 +49,49 @@ class RewardEngine:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the bandit harness.")
     parser.add_argument(
+        "--sim",
+        default="sims/train_sim.wasm",
+        help="Path to the WASM simulator (default: sims/train_sim.wasm).",
+    )
+    parser.add_argument(
         "--validate",
         action="store_true",
         help="Use a different seed to validate (prevents overfitting to the default seed).",
     )
+    parser.add_argument(
+        "--score-only",
+        action="store_true",
+        help="Print only a JSON line with score and policy name, then exit.",
+    )
     args = parser.parse_args()
 
-    # --- SET UP SIMULATOR AND POLICY ---
     seed = VALIDATE_SEED if args.validate else DEFAULT_SEED
-    engine = RewardEngine("reward.wasm", seed)
+    engine = RewardEngine(args.sim, seed)
     pol = CHOSEN_POLICY(engine.num_arms, seed)
     rng = random.Random(seed)
 
-    # --- INITIALIZE TRIAL VARIABLES ---
     cumulative_reward, cumulative_regret = 0.0, 0.0
     last_chosen_arm = -1
 
-    # --- RUN TRIALS ---
     for _ in range(NUM_TRIALS):
-        engine.step(last_chosen_arm, rng.getrandbits(32))  # advance simulator state
+        engine.step(last_chosen_arm, rng.getrandbits(32))
 
-        chosen_arm = pol.choose_arm()  # ask policy to choose an arm
-        chosen_reward = engine.get_arm_reward(chosen_arm)  # get reward for chosen arm
-        pol.observe(chosen_arm, chosen_reward)  # inform policy of reward for their choice
-        
-        # update trial variables
+        chosen_arm = pol.choose_arm()
+        chosen_reward = engine.get_arm_reward(chosen_arm)
+        pol.observe(chosen_arm, chosen_reward)
+
         cumulative_reward += chosen_reward
         cumulative_regret += engine.best_reward() - chosen_reward
         last_chosen_arm = chosen_arm
 
-    # --- PRINT RESULTS ---
+    if args.score_only:
+        print(json.dumps({
+            "score": round(cumulative_reward, 4),
+            "regret": round(cumulative_regret, 4),
+            "policy": CHOSEN_POLICY.__name__,
+        }))
+        return
+
     table = Table(title="Results")
     table.add_column("Metric", style="cyan")
     table.add_column("Value", justify="right", style="green")

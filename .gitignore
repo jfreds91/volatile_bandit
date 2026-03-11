@@ -1,8 +1,11 @@
 .cursorindexingignore
+.cursor
 .specstory
 .venv
 .vscode
 uv.lock
 reward.cpp
+reward_test.cpp
+test_sim.wasm
 __pycache__
 .DS_Store
