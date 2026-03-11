@@ -9,6 +9,8 @@ from rich.table import Table
 import policy
 
 # ── Change this to whatever policy you want to compete with ──
+# Must be a Policy subclass whose __init__ accepts (num_arms: int, seed: int).
+# Example: CHOSEN_POLICY = policy.MyCustomPolicy
 CHOSEN_POLICY = policy.RandomPolicy
 
 DEFAULT_SEED = 42

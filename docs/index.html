@@ -9,113 +9,237 @@
     --bg: #0d1117; --surface: #161b22; --border: #30363d;
     --text: #e6edf3; --muted: #7d8590; --accent: #58a6ff;
     --gold: #f0c040; --silver: #c0c0c0; --bronze: #cd7f32;
+    --green: #3fb950; --red: #f85149;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    background: var(--bg); color: var(--text); padding: 2rem; line-height: 1.5;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    min-height: 100vh;
   }
-  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
-  .subtitle { color: var(--muted); margin-bottom: 1.5rem; font-size: .9rem; }
-  .controls { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  header { margin-bottom: 2rem; }
+  header h1 { font-size: 1.75rem; margin-bottom: .25rem; letter-spacing: -.02em; }
+  header p { color: var(--muted); font-size: .9rem; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+    flex-wrap: wrap; justify-content: space-between;
+  }
   input[type="search"] {
     background: var(--surface); border: 1px solid var(--border); color: var(--text);
     padding: .5rem .75rem; border-radius: 6px; font-size: .875rem; width: 260px;
+    outline: none; transition: border-color .15s;
   }
+  input[type="search"]:focus { border-color: var(--accent); }
   input[type="search"]::placeholder { color: var(--muted); }
+  .entry-count { color: var(--muted); font-size: .8rem; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: .875rem; }
   thead th {
-    text-align: left; padding: .6rem .75rem; border-bottom: 2px solid var(--border);
-    color: var(--muted); font-weight: 600; cursor: pointer; user-select: none;
-    white-space: nowrap;
+    text-align: left; padding: .65rem .75rem;
+    background: var(--surface); color: var(--muted); font-weight: 600;
+    cursor: pointer; user-select: none; white-space: nowrap;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0;
   }
   thead th:hover { color: var(--text); }
-  thead th.sorted::after { content: " ▼"; font-size: .7em; }
-  thead th.sorted.asc::after { content: " ▲"; font-size: .7em; }
-  tbody tr { border-bottom: 1px solid var(--border); }
+  thead th .arrow { font-size: .65em; margin-left: .3em; opacity: .4; }
+  thead th.active .arrow { opacity: 1; color: var(--accent); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: var(--surface); }
-  td { padding: .55rem .75rem; white-space: nowrap; }
-  .rank { font-weight: 700; width: 3rem; text-align: center; }
+  td { padding: .6rem .75rem; white-space: nowrap; }
+
+  .rank { font-weight: 700; width: 3.5rem; text-align: center; font-size: .95rem; }
   .rank-1 { color: var(--gold); }
   .rank-2 { color: var(--silver); }
   .rank-3 { color: var(--bronze); }
-  .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: .8rem; }
-  .score { font-weight: 600; color: var(--accent); }
-  .empty { text-align: center; padding: 3rem; color: var(--muted); }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: .8rem;
+  }
+  .score-val { font-weight: 600; color: var(--accent); }
+  .regret-val { color: var(--muted); }
+
+  .bar-cell { min-width: 180px; }
+  .bar-wrap { display: flex; align-items: center; gap: .5rem; }
+  .bar { height: 6px; border-radius: 3px; background: var(--accent); min-width: 2px;
+    transition: width .3s ease; }
+  .commit-link { color: var(--muted); }
+  .commit-link:hover { color: var(--accent); text-decoration: underline; }
+  .ts { color: var(--muted); font-size: .8rem; }
+
+  .empty-state {
+    text-align: center; padding: 4rem 2rem; color: var(--muted);
+  }
+  .empty-state p { font-size: 1rem; margin-bottom: .25rem; }
+  .empty-state small { font-size: .8rem; }
+
+
+  @media (max-width: 640px) {
+    .container { padding: 1rem; }
+    input[type="search"] { width: 100%; }
+    .bar-cell { display: none; }
+  }
 </style>
 </head>
 <body>
+<div class="container">
 
-<h1>Volatile Bandit — Leaderboard</h1>
-<p class="subtitle">Scores update automatically on every push. Ranked by cumulative reward on the holdout simulator.</p>
+<header>
+  <h1>Volatile Bandit</h1>
+  <p>Ranked by cumulative reward on the holdout simulator. Scores update on every push.</p>
+</header>
 
-<div class="controls">
-  <input type="search" id="filter" placeholder="Filter by branch, policy, or commit…">
+<div class="toolbar">
+  <input type="search" id="filter" placeholder="Filter by branch, policy, or commit...">
+  <span class="entry-count" id="count"></span>
 </div>
 
+<div class="table-wrap">
 <table>
   <thead>
     <tr>
-      <th class="sorted" data-key="rank">#</th>
-      <th data-key="branch">Branch</th>
-      <th data-key="policy">Policy</th>
-      <th data-key="score">Score</th>
-      <th data-key="regret">Regret</th>
-      <th data-key="commit">Commit</th>
-      <th data-key="timestamp">Time</th>
+      <th data-key="rank" data-type="num"># <span class="arrow">▼</span></th>
+      <th data-key="branch" data-type="str">Branch <span class="arrow">▼</span></th>
+      <th data-key="policy" data-type="str">Policy <span class="arrow">▼</span></th>
+      <th data-key="score" data-type="num">Score <span class="arrow">▼</span></th>
+      <th class="bar-cell"></th>
+      <th data-key="regret" data-type="num">Regret <span class="arrow">▼</span></th>
+      <th data-key="commit" data-type="str">Commit <span class="arrow">▼</span></th>
+      <th data-key="timestamp" data-type="str">When <span class="arrow">▼</span></th>
     </tr>
   </thead>
   <tbody id="rows"></tbody>
 </table>
-<div class="empty" id="empty" hidden>No scores yet — push a branch to get started.</div>
+</div>
+
+<div class="empty-state" id="empty" hidden>
+  <p>No scores yet.</p>
+  <small>Push a branch to get started.</small>
+</div>
+
+
+</div>
 
 <script>
+const REPO = "jfreds91/volatile_bandit";
 const tbody = document.getElementById("rows");
 const emptyEl = document.getElementById("empty");
 const filterEl = document.getElementById("filter");
+const countEl = document.getElementById("count");
+
 let data = [];
+let sortKey = "rank";
+let sortAsc = true;
 
 async function load() {
   const resp = await fetch("scores.json?" + Date.now());
   data = await resp.json();
-  render(data);
+  applyAndRender();
+}
+
+function applyAndRender() {
+  let rows = filterRows(data);
+  rows = sortRows(rows);
+  render(rows);
+}
+
+function filterRows(rows) {
+  const q = filterEl.value.toLowerCase().trim();
+  if (!q) return rows;
+  return rows.filter(r =>
+    (r.branch || "").toLowerCase().includes(q) ||
+    (r.policy || "").toLowerCase().includes(q) ||
+    (r.commit || "").toLowerCase().includes(q)
+  );
+}
+
+function sortRows(rows) {
+  const ranked = rows.map((r, i) => ({ ...r, _origRank: i + 1 }));
+  if (sortKey === "rank") {
+    return sortAsc ? ranked : [...ranked].reverse();
+  }
+  const th = document.querySelector(`th[data-key="${sortKey}"]`);
+  const type = th?.dataset.type || "str";
+  return ranked.sort((a, b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (type === "num") { va = va ?? 0; vb = vb ?? 0; return sortAsc ? va - vb : vb - va; }
+    va = (va || "").toLowerCase(); vb = (vb || "").toLowerCase();
+    return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
 }
 
 function render(rows) {
   tbody.innerHTML = "";
-  if (!rows.length) { emptyEl.hidden = false; return; }
+  if (!rows.length && !data.length) { emptyEl.hidden = false; countEl.textContent = ""; return; }
   emptyEl.hidden = true;
-  rows.forEach((r, i) => {
-    const rank = i + 1;
+
+  const maxScore = data.length ? Math.max(...data.map(r => r.score || 0)) : 1;
+  const minScore = data.length ? Math.min(...data.map(r => r.score || 0)) : 0;
+  const range = maxScore - minScore || 1;
+
+  countEl.textContent = rows.length === data.length
+    ? `${data.length} submission${data.length !== 1 ? "s" : ""}`
+    : `${rows.length} of ${data.length}`;
+
+  rows.forEach((r) => {
+    const rank = r._origRank;
     const tr = document.createElement("tr");
     const rankCls = rank <= 3 ? ` rank-${rank}` : "";
-    const ts = r.timestamp ? new Date(r.timestamp).toLocaleString() : "";
+    const medal = rank === 1 ? " ★" : "";
     const shortSha = (r.commit || "").slice(0, 7);
-    tr.innerHTML = `
-      <td class="rank${rankCls}">${rank}</td>
-      <td>${esc(r.branch)}</td>
-      <td class="mono">${esc(r.policy)}</td>
-      <td class="score">${num(r.score)}</td>
-      <td>${num(r.regret)}</td>
-      <td class="mono">${shortSha}</td>
-      <td style="color:var(--muted)">${esc(ts)}</td>`;
+    const commitUrl = `https://github.com/${REPO}/commit/${r.commit}`;
+    const barPct = Math.max(2, ((r.score - minScore) / range) * 100);
+
+    tr.innerHTML =
+      `<td class="rank${rankCls}">${rank}${medal}</td>` +
+      `<td>${esc(r.branch)}</td>` +
+      `<td class="mono">${esc(r.policy)}</td>` +
+      `<td class="score-val">${fmtNum(r.score)}</td>` +
+      `<td class="bar-cell"><div class="bar-wrap"><div class="bar" style="width:${barPct}%"></div></div></td>` +
+      `<td class="regret-val">${fmtNum(r.regret)}</td>` +
+      `<td class="mono"><a class="commit-link" href="${commitUrl}" target="_blank">${shortSha}</a></td>` +
+      `<td class="ts">${fmtTime(r.timestamp)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-function num(v) { return v != null ? v.toLocaleString(undefined, {maximumFractionDigits: 2}) : "—"; }
-function esc(s) { const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+function fmtNum(v) {
+  return v != null ? v.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "—";
+}
 
-filterEl.addEventListener("input", () => {
-  const q = filterEl.value.toLowerCase();
-  render(data.filter(r =>
-    (r.branch || "").toLowerCase().includes(q) ||
-    (r.policy || "").toLowerCase().includes(q) ||
-    (r.commit || "").toLowerCase().includes(q)
-  ));
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+function fmtTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString();
+}
+
+document.querySelectorAll("thead th[data-key]").forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.key;
+    if (sortKey === key) { sortAsc = !sortAsc; }
+    else { sortKey = key; sortAsc = key === "rank" || key === "branch" || key === "policy" || key === "commit"; }
+    document.querySelectorAll("thead th").forEach(t => {
+      t.classList.remove("active");
+      const arrow = t.querySelector(".arrow");
+      if (arrow) arrow.textContent = "▼";
+    });
+    th.classList.add("active");
+    const arrow = th.querySelector(".arrow");
+    if (arrow) arrow.textContent = sortAsc ? "▲" : "▼";
+    applyAndRender();
+  });
 });
+
+filterEl.addEventListener("input", applyAndRender);
 
 load();
 </script>
