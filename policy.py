@@ -25,6 +25,38 @@ class Policy(ABC):
         ...
 
 
+class EpsilonGreedyPolicy(Policy):
+    EPSILON = 0.15
+
+    def __init__(self, num_arms: int, seed: int) -> None:
+        super().__init__(num_arms, seed)
+        self._rng = random.Random(seed)
+        self._counts = [0] * num_arms
+        self._totals = [0.0] * num_arms
+
+    def choose_arm(self) -> int:
+        if any(c == 0 for c in self._counts):
+            return next(i for i, c in enumerate(self._counts) if c == 0)
+        if self._rng.random() < self.EPSILON:
+            return self._rng.randrange(self._num_arms)
+        return max(range(self._num_arms), key=lambda a: self._totals[a] / self._counts[a])
+
+    def observe(self, arm: int, reward: float) -> None:
+        self._counts[arm] += 1
+        self._totals[arm] += reward
+
+    def debug_printout(self) -> str:
+        lines = [f"EpsilonGreedyPolicy (eps={self.EPSILON})", ""]
+        for arm in range(self._num_arms):
+            c, t = self._counts[arm], self._totals[arm]
+            mean = t / c if c else 0.0
+            lines.append(f"  Arm {arm}: pulls={c:,}, total_reward={t:,.4f}, mean_reward={mean:,.4f}")
+        total = sum(self._totals)
+        n = sum(self._counts)
+        lines.append(f"  Total: pulls={n:,}, total_reward={total:,.4f}, mean_reward={total / n:,.4f}" if n else "  Total: (no pulls)")
+        return "\n".join(lines)
+
+
 class RandomPolicy(Policy):
     def __init__(self, num_arms: int, seed: int) -> None:
         super().__init__(num_arms, seed)
