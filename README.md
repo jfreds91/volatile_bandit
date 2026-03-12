@@ -49,4 +49,3 @@ Scores are posted automatically after each push.
 - Edit `policy.py` (your policies) and `CHOSEN_POLICY` in `main.py`.
 - Do not modify `sims/`, `docs/`, or `.github/`.
 - Each push to your branch is scored independently. Push as often as you like.
-- The holdout simulator has the same arms as the training sim, but in a **different order**. Solutions that hardcode arm indices will not generalize.
