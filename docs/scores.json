@@ -5,6 +5,7 @@
     "policy": "EpsilonGreedyPolicy",
     "score": 635405.118,
     "regret": 352783.0138,
+    "author": "jfreds91",
     "timestamp": "2026-03-11T21:22:54.942255+00:00"
   },
   {
@@ -13,6 +14,7 @@
     "policy": "RandomPolicy",
     "score": 536261.7847,
     "regret": 615354.9237,
+    "author": "jfreds91",
     "timestamp": "2026-03-11T20:57:11.090928+00:00"
   },
   {
@@ -21,6 +23,7 @@
     "policy": "RandomPolicy",
     "score": 536261.7847,
     "regret": 615354.9237,
+    "author": "jfreds91",
     "timestamp": "2026-03-11T21:11:04.836242+00:00"
   }
 ]

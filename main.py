@@ -8,8 +8,11 @@ from rich.table import Table
 
 import policy
 
-# ── Change this to whatever policy you want to compete with ──
+# -- Change this to whatever policy you want to compete with --
+
 CHOSEN_POLICY = policy.RandomPolicy
+
+# -- DO NOT MODIFY BELOW THIS LINE --
 
 DEFAULT_SEED = 42
 VALIDATE_SEED = 123

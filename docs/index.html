@@ -59,6 +59,7 @@
   <thead>
     <tr>
       <th class="sorted" data-key="rank">#</th>
+      <th data-key="author">Author</th>
       <th data-key="branch">Branch</th>
       <th data-key="policy">Policy</th>
       <th data-key="score">Score</th>
@@ -95,6 +96,7 @@ function render(rows) {
     const shortSha = (r.commit || "").slice(0, 7);
     tr.innerHTML = `
       <td class="rank${rankCls}">${rank}</td>
+      <td>${esc(r.author)}</td>
       <td>${esc(r.branch)}</td>
       <td class="mono">${esc(r.policy)}</td>
       <td class="score">${num(r.score)}</td>
@@ -111,6 +113,7 @@ function esc(s) { const d = document.createElement("div"); d.textContent = s || 
 filterEl.addEventListener("input", () => {
   const q = filterEl.value.toLowerCase();
   render(data.filter(r =>
+    (r.author || "").toLowerCase().includes(q) ||
     (r.branch || "").toLowerCase().includes(q) ||
     (r.policy || "").toLowerCase().includes(q) ||
     (r.commit || "").toLowerCase().includes(q)

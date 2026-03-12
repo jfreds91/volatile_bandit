@@ -26,6 +26,7 @@ def upsert(
     policy: str,
     score: float,
     regret: float,
+    author: str,
     timestamp: str,
 ) -> list[dict]:
     entry = {
@@ -34,6 +35,7 @@ def upsert(
         "policy": policy,
         "score": score,
         "regret": regret,
+        "author": author,
         "timestamp": timestamp,
     }
 
@@ -56,6 +58,7 @@ def main() -> None:
     parser.add_argument("--policy", required=True, help="Policy class name")
     parser.add_argument("--score", required=True, type=float, help="Cumulative reward")
     parser.add_argument("--regret", required=True, type=float, help="Cumulative regret")
+    parser.add_argument("--author", required=True, help="GitHub username or identity of submitter")
     parser.add_argument(
         "--timestamp",
         default=datetime.now(timezone.utc).isoformat(),
@@ -64,7 +67,7 @@ def main() -> None:
     args = parser.parse_args()
 
     scores = load_scores()
-    scores = upsert(scores, args.commit, args.branch, args.policy, args.score, args.regret, args.timestamp)
+    scores = upsert(scores, args.commit, args.branch, args.policy, args.score, args.regret, args.author, args.timestamp)
     save_scores(scores)
     print(f"Updated scores.json — {len(scores)} entries, top score: {scores[0]['score']}")
 
