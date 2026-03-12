@@ -1,5 +1,14 @@
 [
   {
+    "commit": "a94fca2a18e5e6c789a2b4e21f619ab63b39168b",
+    "branch": "epsilon-greedy",
+    "policy": "EpsilonGreedyPolicy",
+    "score": 650685.4183,
+    "regret": 337151.2833,
+    "author": "jfreds91",
+    "timestamp": "2026-03-12T16:00:29.385224+00:00"
+  },
+  {
     "commit": "7c4e740705a9cf80538f0c8eb54f40bcb7ea393a",
     "branch": "epsilon-greedy",
     "policy": "EpsilonGreedyPolicy",
