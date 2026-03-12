@@ -10,7 +10,7 @@ import policy
 
 # -- Change this to whatever policy you want to compete with --
 
-CHOSEN_POLICY = policy.RandomPolicy
+CHOSEN_POLICY = policy.EpsilonGreedyPolicy
 
 # -- DO NOT MODIFY BELOW THIS LINE --
 

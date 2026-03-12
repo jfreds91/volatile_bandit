@@ -26,7 +26,7 @@ class Policy(ABC):
 
 
 class EpsilonGreedyPolicy(Policy):
-    EPSILON = 0.15
+    EPSILON = 0.10
 
     def __init__(self, num_arms: int, seed: int) -> None:
         super().__init__(num_arms, seed)
